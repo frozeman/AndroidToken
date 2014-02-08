@@ -1,4 +1,4 @@
-AndroidToken Commodity
+AndroidToken Currency
 
 Proof of Work/Proof of Stake Hybrid
 
