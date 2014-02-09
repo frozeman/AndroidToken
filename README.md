@@ -1,12 +1,21 @@
-AndroidToken Currency
 
-Proof of Work/Proof of Stake Hybrid
+AndroidToken Official Development Repo
+==================================
 
-Scrypt
 
-66 800 000 000 coins
-30s block target
+Premined: 66 800 000 000 ADT, which will be used to make the swap over possible.
 
-Default P2P Port: 2454
+Max coins: 100 billion ADT
 
-Default RPC Port: 2543
+
+Proof of Stake 1.2% anual interest
+
+
+Port             77331 
+
+RPC Port     	 77332
+
+
+Testnet Port 	 77333 
+
+Testnet RPC Port 77334

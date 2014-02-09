@@ -41,8 +41,8 @@ static CBigNum bnProofOfStakeHardLimit(~uint256(0) >> 30); // disabled temporari
 static CBigNum bnProofOfWorkLimitTestNet(~uint256(0) >> 16);
 static CBigNum bnProofOfStakeLimitTestNet(~uint256(0) >> 20);
 
-unsigned int nStakeMinAge = 60 * 60 * 24 * 30; // minimum age for coin age
-unsigned int nStakeMaxAge = 60 * 60 * 24 * 90; // stake age of full weight
+unsigned int nStakeMinAge = 60 * 60 * 24 * 5; // minimum age for coin age
+unsigned int nStakeMaxAge = 60 * 60 * 24 * 15; // stake age of full weight
 unsigned int nStakeTargetSpacing = 30; // 30s block spacing
 int64 nChainStartTime = 1376792367;
 int nCoinbaseMaturity = 50; // 5
@@ -964,10 +964,10 @@ int64 GetProofOfWorkReward(unsigned int nHeight)
 		// else if (nHeight > 545000)
 
         // all coins in the first block
-        if(nHeight == 1)   
-            nSubsidy = 66800000000 * COIN;
-        else if(nHeight > 1)
-			nSubsidy = 0 * COIN; // 0% coins per year POW Inflation
+        if(nHeight == 1) {
+            nSubsidy = MAX_MINT_PROOF_OF_WORK;
+        }
+
 		//printf(">>> nHeight = %d, Reward = %d\n", nHeight, nSubsidy);
 
     	return nSubsidy;
@@ -976,65 +976,76 @@ int64 GetProofOfWorkReward(unsigned int nHeight)
 // miner's coin stake reward based on nBits and coin age spent (coin-days)
 int64 GetProofOfStakeReward(int64 nCoinAge, unsigned int nBits, unsigned int nTime)
 {
+ //    int64 nRewardCoinYear;
+
+ //    if(fTestNet || nTime > PROTOCOL_SWITCH_TIME)
+ //    {
+ //        // Stage 2 of emission process is PoS-based. It will be active on mainNet since 20 Jun 2013.
+
+ //        CBigNum bnRewardCoinYearLimit = MAX_MINT_PROOF_OF_STAKE; // Base stake mint rate, 100% year interest
+ //        CBigNum bnTarget;
+ //        bnTarget.SetCompact(nBits);
+ //        CBigNum bnTargetLimit = bnProofOfStakeLimit;
+ //        bnTargetLimit.SetCompact(bnTargetLimit.GetCompact());
+
+ //        // AndroidToken: reward for coin-year is cut in half every 64x multiply of PoS difficulty
+ //        // A reasonably continuous curve is used to avoid shock to market
+ //        // (nRewardCoinYearLimit / nRewardCoinYear) ** 4 == bnProofOfStakeLimit / bnTarget
+ //        //
+ //        // Human readable form:
+ //        //
+ //        // nRewardCoinYear = 1 / (posdiff ^ 1/4)
+
+ //        CBigNum bnLowerBound = 1 * CENT; // Lower interest bound is 1% per year
+ //        CBigNum bnUpperBound = bnRewardCoinYearLimit;
+ //        while (bnLowerBound + CENT <= bnUpperBound)
+ //        {
+ //            CBigNum bnMidValue = (bnLowerBound + bnUpperBound) / 2;
+ //            if (fDebug && GetBoolArg("-printcreation"))
+ //                printf("GetProofOfStakeReward() : lower=%"PRI64d" upper=%"PRI64d" mid=%"PRI64d"\n", bnLowerBound.getuint64(), bnUpperBound.getuint64(), bnMidValue.getuint64());
+ //            if (bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnTargetLimit > bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnTarget)
+ //                bnUpperBound = bnMidValue;
+ //            else
+ //                bnLowerBound = bnMidValue;
+ //        }
+
+ //        nRewardCoinYear = bnUpperBound.getuint64();
+
+	// 	if (nTime > ROUND_SWITCH_TIME)
+	// 		nRewardCoinYear = min(nRewardCoinYear, MAX_MINT_PROOF_OF_STAKE);
+	// 	else
+	// 	nRewardCoinYear = min((nRewardCoinYear / CENT) * CENT, MAX_MINT_PROOF_OF_STAKE);
+ //    }
+ //    else
+ //    {
+ //        // Old creation amount per coin-year, 5% fixed stake mint rate
+ //        nRewardCoinYear = 0.015 * CENT;
+ //    }
+
+ //    int64 nSubsidy = nCoinAge * 33 / (365 * 33 + 8) * nRewardCoinYear;
+
+	// if (nTime > ROUND_SWITCH_TIME)
+	// 	nSubsidy = (nCoinAge * 33 * nRewardCoinYear) / (365 * 33 + 8) ;
+	// else
+	// 	nSubsidy = nCoinAge * 33 / (365 * 33 + 8) * nRewardCoinYear;
+
+ //    if (fDebug && GetBoolArg("-printcreation"))
+ //        printf("GetProofOfStakeReward(): create=%s nCoinAge=%"PRI64d" nBits=%d\n", FormatMoney(nSubsidy).c_str(), nCoinAge, nBits);
+ //    return nSubsidy;
+
+
     int64 nRewardCoinYear;
 
-    if(fTestNet || nTime > PROTOCOL_SWITCH_TIME)
-    {
-        // Stage 2 of emission process is PoS-based. It will be active on mainNet since 20 Jun 2013.
+    nRewardCoinYear = MAX_MINT_PROOF_OF_STAKE;
 
-        CBigNum bnRewardCoinYearLimit = MAX_MINT_PROOF_OF_STAKE; // Base stake mint rate, 100% year interest
-        CBigNum bnTarget;
-        bnTarget.SetCompact(nBits);
-        CBigNum bnTargetLimit = bnProofOfStakeLimit;
-        bnTargetLimit.SetCompact(bnTargetLimit.GetCompact());
-
-        // AndroidToken: reward for coin-year is cut in half every 64x multiply of PoS difficulty
-        // A reasonably continuous curve is used to avoid shock to market
-        // (nRewardCoinYearLimit / nRewardCoinYear) ** 4 == bnProofOfStakeLimit / bnTarget
-        //
-        // Human readable form:
-        //
-        // nRewardCoinYear = 1 / (posdiff ^ 1/4)
-
-        CBigNum bnLowerBound = 1 * CENT; // Lower interest bound is 1% per year
-        CBigNum bnUpperBound = bnRewardCoinYearLimit;
-        while (bnLowerBound + CENT <= bnUpperBound)
-        {
-            CBigNum bnMidValue = (bnLowerBound + bnUpperBound) / 2;
-            if (fDebug && GetBoolArg("-printcreation"))
-                printf("GetProofOfStakeReward() : lower=%"PRI64d" upper=%"PRI64d" mid=%"PRI64d"\n", bnLowerBound.getuint64(), bnUpperBound.getuint64(), bnMidValue.getuint64());
-            if (bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnTargetLimit > bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnTarget)
-                bnUpperBound = bnMidValue;
-            else
-                bnLowerBound = bnMidValue;
-        }
-
-        nRewardCoinYear = bnUpperBound.getuint64();
-
-		if (nTime > ROUND_SWITCH_TIME)
-			nRewardCoinYear = min(nRewardCoinYear, MAX_MINT_PROOF_OF_STAKE);
-		else
-		nRewardCoinYear = min((nRewardCoinYear / CENT) * CENT, MAX_MINT_PROOF_OF_STAKE);
-    }
-    else
-    {
-        // Old creation amount per coin-year, 5% fixed stake mint rate
-        nRewardCoinYear = 0.015 * CENT;
-    }
-
-    int64 nSubsidy = nCoinAge * 33 / (365 * 33 + 8) * nRewardCoinYear;
-
-	if (nTime > ROUND_SWITCH_TIME)
-		nSubsidy = (nCoinAge * 33 * nRewardCoinYear) / (365 * 33 + 8) ;
-	else
-		nSubsidy = nCoinAge * 33 / (365 * 33 + 8) * nRewardCoinYear;
+    int64 nSubsidy = nCoinAge * nRewardCoinYear / 365;
 
     if (fDebug && GetBoolArg("-printcreation"))
-        printf("GetProofOfStakeReward(): create=%s nCoinAge=%"PRI64d" nBits=%d\n", FormatMoney(nSubsidy).c_str(), nCoinAge, nBits);
+        printf("GetProofOfStakeReward(): create=%s nCoinAge=%"PRI64d"\n", FormatMoney(nSubsidy).c_str(), nCoinAge);
     return nSubsidy;
 }
 
-static const int64 nTargetTimespan = 15 * 60;  // 0.16 of a day
+static const int64 nTargetTimespan = 60;  // 60s
 static const int64 nTargetSpacingWorkMax = 12 * nStakeTargetSpacing; // 12 minutes
 
 //
@@ -2569,7 +2580,7 @@ bool LoadBlockIndex(bool fAllowNew)
         block.nVersion = 1;
         block.nTime    = nChainStartTime + 503;
         block.nBits    = bnProofOfWorkLimit.GetCompact();
-        block.nNonce   = 93364; //173202
+        block.nNonce   = 0; //173202
 
  	   if (false  && (block.GetHash() != hashGenesisBlock)) {
 
@@ -2595,7 +2606,7 @@ bool LoadBlockIndex(bool fAllowNew)
         printf("block.nTime = %u \n", block.nTime);
         printf("block.nNonce = %u \n", block.nNonce);
 
-        assert(block.hashMerkleRoot == uint256("0x44e868d7a248acecf786813c4afe38d5ed3a97e21227cae03e5e4de47e5f67c2"));
+        assert(block.hashMerkleRoot == uint256("0x"));
 
         assert(block.GetHash() == hashGenesisBlock);
 
